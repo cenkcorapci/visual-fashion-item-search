@@ -15,7 +15,7 @@ DEFAULT_IMAGE_SIZE = 224
 
 # Local files
 TEMP_PATH = '/tmp'
-IMAGE_DOWNLOAD_PATH = TEMP_PATH + '/images'
+IMAGE_DOWNLOAD_PATH = '/run/media/twoaday/data-storag/data-sets/cimri/images/'
 CIMRI_CSV = '/run/media/twoaday/data-storag/data-sets/cimri/match_core_data_set_with_images.csv'
 DIM_RED_MODEL_PATH = '/run/media/twoaday/data-storag/data-sets/cimri/pca_2.pkl'
 TENSORBOARD_PATH = '/run/media/twoaday/data-storag/data-sets/cimri/'

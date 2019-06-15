@@ -64,5 +64,3 @@ class ImageVectorizationModel:
         except Exception as exp:
             logging.error("Can't get feature vector for image {0}".format(exp))
             raise exp
-        finally:
-            delete_image(img_id)

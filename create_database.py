@@ -8,6 +8,8 @@ from tqdm import tqdm
 
 from commons.config import CIMRI_CSV, DIM_RED_MODEL_PATH
 from feature_extraction.image_vectorization import ImageVectorizationModel, ImageClassificationModel
+from scipy import spatial
+import random
 
 # Get data
 df = pd.read_csv(CIMRI_CSV, error_bad_lines=False)
@@ -36,6 +38,7 @@ for _, row in tqdm(df.sample(3).iterrows(), total=len(df), desc='Vectorizing ima
             image_list.append([row['productId'], img_id])
         except Exception as exp:
             logging.error(exp)
+
 # Reduce dimensionality
 pca = PCA(n_components=2)
 pca.fit(image_vectors)
@@ -48,4 +51,9 @@ X_embedded = np.array(X_embedded)
 image_list = np.array(image_list)
 df_concatenated = np.concatenate((image_list, X_embedded), axis=1)
 df_concatenated = pd.DataFrame(df_concatenated, columns=['productId', 'imageId', 'x', 'y'])
-print(df_concatenated.sample(10))
+
+# Generate index
+tree = spatial.KDTree(image_vectors)
+distances, indexes = tree.query(random.sample(image_vectors, 1), k=5)
+for index in indexes:
+    print(image_list[index])
