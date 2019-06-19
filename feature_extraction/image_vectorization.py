@@ -11,7 +11,7 @@ from keras.applications.vgg19 import VGG19
 from keras.preprocessing import image
 
 from commons.config import DEFAULT_IMAGE_SIZE, RANDOM_STATE, IMAGE_DOWNLOAD_PATH
-from data.utils import download_image, delete_image
+from data.utils import download_image
 
 
 class ImageClassificationModel:

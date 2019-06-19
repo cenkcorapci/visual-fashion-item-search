@@ -2,7 +2,7 @@
 
 import threading
 
-from tqdm import tqdm
+from tqdm import tqdm, tqdm_notebook
 
 
 class AtomicCounter:
@@ -27,9 +27,9 @@ class AtomicProgressBar:
     """An atomic, thread-safe incrementing counter.
     """
 
-    def __init__(self, total=100, desc=''):
+    def __init__(self, total=100, desc='', notebook=False):
         """Initialize a new atomic counter to given initial value (default 0)."""
-        self.bar = tqdm(total=total, desc=desc)
+        self.bar = tqdm(total=total, desc=desc) if not notebook else tqdm_notebook(total=total, desc=desc)
         self._lock = threading.Lock()
 
     def increment(self, num=1):

@@ -6,12 +6,12 @@ from tqdm import tqdm
 
 from commons.atomic_counters import AtomicProgressBar
 from commons.config import CIMRI_CSV
-from data.utils import download_image
+from data.utils import download_cimri_image
 
 # Get data
 df = pd.read_csv(CIMRI_CSV, error_bad_lines=False)
 df = df.drop(columns=['Unnamed: 0'])
-df = df.loc[df.isSame == 1]
+df = df.loc[df.isSame == 0]
 df = df.drop(columns=['offerId', 'isSame', 'secondProduct'])
 df = df.dropna()
 fashion_categories = df.loc[df.firstProduct.str.contains(
@@ -19,6 +19,7 @@ fashion_categories = df.loc[df.firstProduct.str.contains(
     regex=True)]
 fashion_categories = fashion_categories.categoryIdOfFirst.unique()
 df = df.loc[df.categoryIdOfFirst.isin(fashion_categories)]
+df = df.sample(frac=1.)
 
 image_ids = []
 for _, row in tqdm(df.iterrows(), total=len(df), desc='Gathering image ids'):
@@ -36,12 +37,12 @@ p_bar = AtomicProgressBar(total=len(image_ids), desc='Downloading images')
 
 def download_with_log(img_id):
     try:
-        download_image(img_id)
+        download_cimri_image(img_id)
     except Exception as exp:
         logging.error(exp)
     finally:
         p_bar.increment()
 
 
-with concurrent.futures.ThreadPoolExecutor(max_workers=32) as executor:
+with concurrent.futures.ThreadPoolExecutor(max_workers=16) as executor:
     _ = executor.map(download_with_log, set(image_ids))
