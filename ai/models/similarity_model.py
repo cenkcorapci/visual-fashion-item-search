@@ -1,11 +1,10 @@
 from keras.applications.xception import Xception
-from keras.layers import Dense, Dropout, GlobalMaxPooling2D
+from keras.layers import Dense, Flatten
 from keras.layers import Input, concatenate
 from keras.models import Model
 from keras.optimizers import Adam
 
 from ai.loss_functions import triplet_loss
-
 from commons.config import DEFAULT_IMAGE_SIZE
 
 
@@ -25,9 +24,8 @@ class ImageSimilarityNetwork:
         x = base_model.output
 
         # added layers
-        x = GlobalMaxPooling2D()(x)
-        x = Dropout(0.5)(x)
-        vector = Dense(2048, activation='selu', kernel_initializer='lecun_normal')(x)
+        x = Flatten()(x)
+        vector = Dense(4096, activation='relu', name='embeddings')(x)
 
         # this is the model we will train
         model = Model(inputs=base_model.input, outputs=vector)
