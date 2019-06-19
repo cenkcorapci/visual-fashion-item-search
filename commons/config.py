@@ -11,7 +11,7 @@ LOGS_PATH = '/tmp/tb_logs/'
 
 # Experiments
 RANDOM_STATE = 41
-DEFAULT_IMAGE_SIZE = 224
+DEFAULT_IMAGE_SIZE = 512
 
 # Local files
 TEMP_PATH = '/tmp'
@@ -21,13 +21,13 @@ CIMRI_CSV = '/run/media/twoaday/data-storag/data-sets/cimri/match_core_data_set_
 PRODUCT_IMAGES_PATH = '/run/media/twoaday/data-storag/data-sets/fashion-product-images-small/images/'
 PRODUCT_IMAGES_CSV_PATH = '/run/media/twoaday/data-storag/data-sets/fashion-product-images-small/styles.csv'
 
+MVC_BASE_PATH = '/run/media/twoaday/data-storag/data-sets/multi-view-clothing/'
 MVC_ATTRIBUTES_PATH = '/run/media/twoaday/data-storag/data-sets/multi-view-clothing/attribute_labels.json'
 MVC_IMAGE_LINKS_PATH = '/run/media/twoaday/data-storag/data-sets/multi-view-clothing/image_links.json'
 MVC_INFO_PATH = '/run/media/twoaday/data-storag/data-sets/multi-view-clothing/mvc_info.json'
 MVC_IMAGES_FOLDER = '/run/media/twoaday/data-storag/data-sets/multi-view-clothing/images/'
 
 DIM_RED_MODEL_PATH = '/run/media/twoaday/data-storag/data-sets/cimri/pca_2.pkl'
-TENSORBOARD_PATH = '/run/media/twoaday/data-storag/data-sets/cimri/'
 
 CATEGORY_COUNTS_DICT = {'masterCategory': 7,
                         'subCategory': 45,
