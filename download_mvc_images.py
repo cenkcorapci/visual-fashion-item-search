@@ -30,7 +30,7 @@ def download_with_log(img_url):
         p_bar.increment()
 
 
-with concurrent.futures.ThreadPoolExecutor(max_workers=32) as executor:
+with concurrent.futures.ThreadPoolExecutor(max_workers=64) as executor:
     _ = executor.map(download_with_log, set(image_links))
 
 logging.info('Downloaded {0} images successfully.'.format(counter.value))

@@ -26,6 +26,7 @@ MVC_ATTRIBUTES_PATH = '/run/media/twoaday/data-storag/data-sets/multi-view-cloth
 MVC_IMAGE_LINKS_PATH = '/run/media/twoaday/data-storag/data-sets/multi-view-clothing/image_links.json'
 MVC_INFO_PATH = '/run/media/twoaday/data-storag/data-sets/multi-view-clothing/mvc_info.json'
 MVC_IMAGES_FOLDER = '/run/media/twoaday/data-storag/data-sets/multi-view-clothing/images/'
+MVC_GENERATED_TRIPLETS_CSV = '/run/media/twoaday/data-storag/data-sets/multi-view-clothing/triplets.csv'
 
 DIM_RED_MODEL_PATH = '/run/media/twoaday/data-storag/data-sets/cimri/pca_2.pkl'
 
