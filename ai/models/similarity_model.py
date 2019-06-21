@@ -4,8 +4,8 @@ from keras.layers import Input, concatenate
 from keras.models import Model
 from keras.optimizers import Adam
 
-from ai.loss_functions import triplet_loss
-from commons.config import DEFAULT_IMAGE_SIZE
+from ai.loss_functions import lossless_triplet_loss
+from commons.config import DEFAULT_IMAGE_SIZE, DEFAULT_VECTOR_SIZE
 
 
 class ImageSimilarityNetwork:
@@ -25,7 +25,7 @@ class ImageSimilarityNetwork:
 
         # added layers
         x = GlobalMaxPool2D()(x)
-        vector = Dense(4096, activation='selu', kernel_initializer='lecun_normal', name='embeddings')(x)
+        vector = Dense(DEFAULT_VECTOR_SIZE, activation='sigmoid', name='embeddings')(x)
 
         # this is the model we will train
         model = Model(inputs=base_model.input, outputs=vector)
@@ -48,7 +48,7 @@ class ImageSimilarityNetwork:
         merged_vector = concatenate([encoded_anchor, encoded_positive, encoded_negative], axis=-1, name='merged_layer')
 
         model = Model(inputs=[anchor_input, positive_input, negative_input], outputs=merged_vector)
-        model.compile(loss=triplet_loss, optimizer=self._optimization)
+        model.compile(loss=lossless_triplet_loss, optimizer=self._optimization)
         return model
 
     def get_trained_model(self, path):

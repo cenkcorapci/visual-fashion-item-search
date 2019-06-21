@@ -12,6 +12,7 @@ LOGS_PATH = '/tmp/tb_logs/'
 # Experiments
 RANDOM_STATE = 41
 DEFAULT_IMAGE_SIZE = 256
+DEFAULT_VECTOR_SIZE = 512
 
 # Local files
 TEMP_PATH = '/tmp'

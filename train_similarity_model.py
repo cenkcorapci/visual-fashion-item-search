@@ -7,6 +7,7 @@ import pathlib
 import random
 
 import pandas as pd
+from colorama import Fore
 from keras.callbacks import ModelCheckpoint, TensorBoard, EarlyStopping
 from sklearn.model_selection import train_test_split
 from tqdm import tqdm
@@ -14,7 +15,6 @@ from tqdm import tqdm
 from ai.callbacks import step_decay_schedule
 from ai.models.similarity_model import ImageSimilarityNetwork
 from commons.config import MVC_INFO_PATH, MVC_BASE_PATH, MVC_IMAGES_FOLDER, MVC_GENERATED_TRIPLETS_CSV
-from commons.image_utils import get_checked_images
 from data.triples_data_set import TriplesDataSet
 
 MODEL_NAME = 'xception_similarity'
@@ -46,6 +46,11 @@ args = parser.parse_args()
 data_set = []
 if os.path.exists(MVC_GENERATED_TRIPLETS_CSV):
     data_set = pd.read_csv(MVC_GENERATED_TRIPLETS_CSV)
+
+    data_set = [[row['anchor'], row['positive'], row['negative']] for _, row in
+                tqdm(data_set.iterrows(), desc='Loading triplets',
+                     bar_format="{l_bar}%s{bar}%s{r_bar}" % (Fore.MAGENTA, Fore.RESET),
+                     total=len(data_set))]
     if args.sample_size is not None:
         data_set = random.sample(data_set, args.sample_size)
 
