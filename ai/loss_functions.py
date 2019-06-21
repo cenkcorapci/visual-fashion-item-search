@@ -16,8 +16,6 @@ def triplet_loss(y_true, y_pred, alpha=0.4):
     print('y_pred.shape = ', y_pred)
 
     total_lenght = y_pred.shape.as_list()[-1]
-    #     print('total_lenght=',  total_lenght)
-    #     total_lenght =12
 
     anchor = y_pred[:, 0:int(total_lenght * 1 / 3)]
     positive = y_pred[:, int(total_lenght * 1 / 3):int(total_lenght * 2 / 3)]
@@ -34,3 +32,11 @@ def triplet_loss(y_true, y_pred, alpha=0.4):
     loss = K.maximum(basic_loss, 0.0)
 
     return loss
+
+
+def contrastive_loss(y_true, y_pred):
+    '''Contrastive loss from Hadsell-et-al.'06
+    http://yann.lecun.com/exdb/publis/pdf/hadsell-chopra-lecun-06.pdf
+    '''
+    margin = 1
+    return K.mean(y_true * K.square(y_pred) + (1 - y_true) * K.square(K.maximum(margin - y_pred, 0)))

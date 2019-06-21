@@ -1,5 +1,5 @@
 from keras.applications.xception import Xception
-from keras.layers import Dense, Flatten
+from keras.layers import Dense, GlobalMaxPool2D
 from keras.layers import Input, concatenate
 from keras.models import Model
 from keras.optimizers import Adam
@@ -24,8 +24,8 @@ class ImageSimilarityNetwork:
         x = base_model.output
 
         # added layers
-        x = Flatten()(x)
-        vector = Dense(4096, activation='relu', name='embeddings')(x)
+        x = GlobalMaxPool2D()(x)
+        vector = Dense(4096, activation='selu', kernel_initializer='lecun_normal', name='embeddings')(x)
 
         # this is the model we will train
         model = Model(inputs=base_model.input, outputs=vector)
@@ -50,3 +50,13 @@ class ImageSimilarityNetwork:
         model = Model(inputs=[anchor_input, positive_input, negative_input], outputs=merged_vector)
         model.compile(loss=triplet_loss, optimizer=self._optimization)
         return model
+
+    def get_trained_model(self, path):
+        h, w, c = self._dimensions[0], self._dimensions[1], self._dimensions[2]
+        anchor_input = Input((h, w, c,), name='anchor_input')
+        # Shared embedding layer for positive and negative items
+        shared_network = self._create_base_network()
+        encoded_anchor = shared_network(anchor_input)
+        trained_model = Model(inputs=anchor_input, outputs=encoded_anchor)
+        trained_model.load_weights(path)
+        return trained_model

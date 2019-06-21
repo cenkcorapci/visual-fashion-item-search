@@ -16,3 +16,4 @@ opencv-python>=4.0.0.21
 imgaug>=0.2.8
 swifter
 imagehash
+colorama

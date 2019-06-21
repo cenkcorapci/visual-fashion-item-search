@@ -2,6 +2,7 @@ import argparse
 import glob
 import itertools
 import logging
+import os
 import pathlib
 import random
 
@@ -13,8 +14,8 @@ from tqdm import tqdm
 from ai.callbacks import step_decay_schedule
 from ai.models.similarity_model import ImageSimilarityNetwork
 from commons.config import MVC_INFO_PATH, MVC_BASE_PATH, MVC_IMAGES_FOLDER, MVC_GENERATED_TRIPLETS_CSV
+from commons.image_utils import get_checked_images
 from data.triples_data_set import TriplesDataSet
-import os
 
 MODEL_NAME = 'xception_similarity'
 
@@ -34,9 +35,9 @@ usage_docs = """
 
 parser = argparse.ArgumentParser(usage=usage_docs)
 
-parser.add_argument('--epochs', type=int, default=500)
+parser.add_argument('--epochs', type=int, default=200)
 parser.add_argument('--val_split', type=float, default=.1)
-parser.add_argument('--batch_size', type=int, default=4)
+parser.add_argument('--batch_size', type=int, default=2)
 parser.add_argument('--sample_size', type=int, default=None)
 
 args = parser.parse_args()
@@ -45,8 +46,9 @@ args = parser.parse_args()
 data_set = []
 if os.path.exists(MVC_GENERATED_TRIPLETS_CSV):
     data_set = pd.read_csv(MVC_GENERATED_TRIPLETS_CSV)
-    data_set = [[row['anchor'], row['positive'], row['negative']] for _, row in
-                tqdm(data_set.iterrows(), desc='Loading triplets', total=len(data_set))]
+    if args.sample_size is not None:
+        data_set = random.sample(data_set, args.sample_size)
+
 else:
     df_mvc_info = pd.read_json(MVC_INFO_PATH)
     product_ids = df_mvc_info.productId.unique().tolist()
@@ -133,5 +135,5 @@ model.fit_generator(
     epochs=args.epochs,
     use_multiprocessing=True,
     workers=8,
-    max_queue_size=32,
+    max_queue_size=8,
     verbose=1)
