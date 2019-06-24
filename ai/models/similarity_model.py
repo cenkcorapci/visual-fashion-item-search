@@ -1,5 +1,5 @@
 from keras.applications.xception import Xception
-from keras.layers import Dense, GlobalMaxPool2D
+from keras.layers import Dense, GlobalAveragePooling2D
 from keras.layers import Input, concatenate
 from keras.models import Model
 from keras.optimizers import Adam
@@ -18,13 +18,13 @@ class ImageSimilarityNetwork:
         Base network to be shared.
         """
         base_model = Xception(input_shape=(self._dimensions[0], self._dimensions[1], self._dimensions[2]),
-                              weights="imagenet", include_top=False)
+                           include_top=False)
         for layer in base_model.layers:
             layer.trainable = True
         x = base_model.output
 
         # added layers
-        x = GlobalMaxPool2D()(x)
+        x = GlobalAveragePooling2D()(x)
         vector = Dense(DEFAULT_VECTOR_SIZE, activation='sigmoid', name='embeddings')(x)
 
         # this is the model we will train

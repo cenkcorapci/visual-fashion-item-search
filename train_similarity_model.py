@@ -1,8 +1,5 @@
 import argparse
-import glob
-import itertools
 import logging
-import os
 import pathlib
 import random
 
@@ -14,10 +11,10 @@ from tqdm import tqdm
 
 from ai.callbacks import step_decay_schedule
 from ai.models.similarity_model import ImageSimilarityNetwork
-from commons.config import MVC_INFO_PATH, MVC_BASE_PATH, MVC_IMAGES_FOLDER, MVC_GENERATED_TRIPLETS_CSV
+from commons.config import MVC_BASE_PATH, MVC_GENERATED_EASY_TRIPLETS_CSV
 from data.triples_data_set import TriplesDataSet
 
-MODEL_NAME = 'xception_similarity'
+MODEL_NAME = 'inception_similarity'
 
 TB_LOG_DIRECTORY = MVC_BASE_PATH + 'tb_logs/' + MODEL_NAME + '/'
 MODEL_PATH = MVC_BASE_PATH + 'models/'
@@ -37,76 +34,23 @@ parser = argparse.ArgumentParser(usage=usage_docs)
 
 parser.add_argument('--epochs', type=int, default=200)
 parser.add_argument('--val_split', type=float, default=.1)
-parser.add_argument('--batch_size', type=int, default=2)
+parser.add_argument('--batch_size', type=int, default=16)
 parser.add_argument('--sample_size', type=int, default=None)
 
 args = parser.parse_args()
 
 # Generate data set ------------------------------------------
-data_set = []
-if os.path.exists(MVC_GENERATED_TRIPLETS_CSV):
-    data_set = pd.read_csv(MVC_GENERATED_TRIPLETS_CSV)
+data_set = pd.read_csv(MVC_GENERATED_EASY_TRIPLETS_CSV)
 
-    data_set = [[row['anchor'], row['positive'], row['negative']] for _, row in
-                tqdm(data_set.iterrows(), desc='Loading triplets',
-                     bar_format="{l_bar}%s{bar}%s{r_bar}" % (Fore.MAGENTA, Fore.RESET),
-                     total=len(data_set))]
-    if args.sample_size is not None:
-        data_set = random.sample(data_set, args.sample_size)
+data_set = [[row['anchor'], row['positive'], row['negative']] for _, row in
+            tqdm(data_set.iterrows(), desc='Loading triplets',
+                 bar_format="{l_bar}%s{bar}%s{r_bar}" % (Fore.MAGENTA, Fore.RESET),
+                 total=len(data_set))]
 
-else:
-    df_mvc_info = pd.read_json(MVC_INFO_PATH)
-    product_ids = df_mvc_info.productId.unique().tolist()
-    if args.sample_size is not None:
-        product_ids = random.sample(product_ids, args.sample_size)
-    logging.info('Found {0} products'.format(len(product_ids)))
-    available_image_list = glob.glob("{0}*.jpg".format(MVC_IMAGES_FOLDER))
-    available_image_list = [x.split('/')[-1] for x in tqdm(available_image_list, desc='Parsing available image files')]
+if args.sample_size is not None:
+    data_set = random.sample(data_set, args.sample_size)
 
-    query_cache = {}
-    for sub_cat in tqdm(df_mvc_info.subCategory2.unique().tolist()):
-        for gender in tqdm(df_mvc_info.productGender.unique().tolist()):
-            query_cache[(sub_cat, gender)] = df_mvc_info.loc[df_mvc_info.subCategory2 == sub_cat].loc[
-                df_mvc_info.productGender == gender][['productId', 'colourId', 'image_url_2x']]
-
-    for product_id in tqdm(product_ids, desc='Generating image triplets'):
-        try:
-            # Every item can have multiple different colour variations, we consider them different
-            df_product = df_mvc_info.loc[df_mvc_info.productId == product_id]
-            colour_variations = df_product.colourId.unique().tolist()
-            for colour in colour_variations:
-                # Find products images
-                positives = df_product.loc[df_product.colourId == colour].image_url_2x.tolist()
-
-                # Get similar but different images
-                sub_cat = df_product.subCategory2.tolist()[0]
-                gender = df_product.productGender.tolist()[0]
-                df_neg = query_cache[(sub_cat, gender)]
-                df_neg = df_neg.loc[df_neg.colourId == colour]
-                df_neg = df_neg.loc[df_neg.productId != product_id]
-
-                # Generate pairs from products images
-                pairs = list(itertools.combinations(positives, 2))
-
-                # Add similar but different images to pairs as negative examples
-                df_neg = df_neg.sample(min(len(pairs), len(df_neg))).image_url_2x.tolist()
-                if len(pairs) > len(df_neg):
-                    cat = df_mvc_info.loc[df_mvc_info.productId == product_id].subCategory2.tolist()[0]
-                    add_df = df_mvc_info.loc[df_mvc_info.productId != product_id].loc[df_mvc_info.subCategory2 == cat]
-                    add_df = add_df.sample(len(pairs) - len(df_neg)).image_url_2x.tolist()
-                    df_neg += add_df
-                # Generate triplets
-                for pair, negative in zip(pairs, df_neg):
-                    anchor, positive = pair
-                    sample = [anchor.split('/')[-1], positive.split('/')[-1], negative.split('/')[-1]]
-                    sample = [img for img in sample if img in available_image_list]
-                    if len(sample) == 3:
-                        data_set.append(sample)
-        except Exception as exp:
-            logging.error('Can not generate triplet', exp)
-
-    pd.DataFrame(data_set, columns=['anchor', 'positive', 'negative']).to_csv(MVC_GENERATED_TRIPLETS_CSV, index=False)
-logging.info('Usinga a data set with {0} triplets, example triplet: {1}'.format(len(data_set), data_set[0]))
+logging.info('Using a data set with {0} triplets, example triplet: {1}'.format(len(data_set), data_set[0]))
 
 train_data_set, validation_data_set = train_test_split(data_set, test_size=args.val_split)
 train_data_set = TriplesDataSet(train_data_set, args.batch_size)
@@ -139,6 +83,6 @@ model.fit_generator(
     validation_data=validation_data_set,
     epochs=args.epochs,
     use_multiprocessing=True,
-    workers=8,
-    max_queue_size=8,
+    workers=4,
+    max_queue_size=32,
     verbose=1)

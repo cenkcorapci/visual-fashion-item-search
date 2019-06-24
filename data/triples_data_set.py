@@ -1,6 +1,5 @@
 import logging
 import random as pyrandom
-from random import randint
 
 import imgaug.augmenters as iaa
 import keras

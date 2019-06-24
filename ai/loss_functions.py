@@ -16,11 +16,11 @@ def triplet_loss(y_true, y_pred, alpha=0.4):
     loss -- real number, value of the loss
     """
 
-    total_lenght = y_pred.shape.as_list()[-1]
+    total_length = y_pred.shape.as_list()[-1]
 
-    anchor = y_pred[:, 0:int(total_lenght * 1 / 3)]
-    positive = y_pred[:, int(total_lenght * 1 / 3):int(total_lenght * 2 / 3)]
-    negative = y_pred[:, int(total_lenght * 2 / 3):int(total_lenght * 3 / 3)]
+    anchor = y_pred[:, 0:int(total_length * 1 / 3)]
+    positive = y_pred[:, int(total_length * 1 / 3):int(total_length * 2 / 3)]
+    negative = y_pred[:, int(total_length * 2 / 3):int(total_length * 3 / 3)]
 
     # distance between the anchor and the positive
     pos_dist = K.sum(K.sqrt(anchor - positive), axis=1)
@@ -55,11 +55,11 @@ def lossless_triplet_loss(y_true, y_pred, N=DEFAULT_VECTOR_SIZE, beta=DEFAULT_VE
     loss -- real number, value of the loss
     """
 
-    total_lenght = y_pred.shape.as_list()[-1]
+    total_length = y_pred.shape.as_list()[-1]
 
-    anchor = y_pred[:, 0:int(total_lenght * 1 / 3)]
-    positive = y_pred[:, int(total_lenght * 1 / 3):int(total_lenght * 2 / 3)]
-    negative = y_pred[:, int(total_lenght * 2 / 3):int(total_lenght * 3 / 3)]
+    anchor = y_pred[:, 0:int(total_length * 1 / 3)]
+    positive = y_pred[:, int(total_length * 1 / 3):int(total_length * 2 / 3)]
+    negative = y_pred[:, int(total_length * 2 / 3):int(total_length * 3 / 3)]
 
     # distance between the anchor and the positive
     pos_dist = K.sum(K.square(anchor - positive), axis=1)
@@ -70,7 +70,7 @@ def lossless_triplet_loss(y_true, y_pred, N=DEFAULT_VECTOR_SIZE, beta=DEFAULT_VE
     # Non Linear Values
 
     # -ln(-x/N+1)
-    pos_dist = -K.log((pos_dist / beta) + 1 + epsilon)
+    pos_dist = -K.log(( pos_dist / beta) + 1 + epsilon)
     neg_dist = -K.log(((N - neg_dist) / beta) + 1 + epsilon)
 
     # compute loss

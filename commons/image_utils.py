@@ -1,15 +1,15 @@
-import concurrent.futures
+import glob
 import logging
+import os
 
 import numpy as np
-import pandas as pd
 from PIL import Image
 from colorama import Fore
 from keras.preprocessing import image
 from tqdm import tqdm
 
 from commons.config import DEFAULT_IMAGE_SIZE
-from commons.config import MVC_GENERATED_TRIPLETS_CSV, MVC_IMAGES_FOLDER
+from commons.config import MVC_IMAGES_FOLDER
 
 
 def scale_image(image, max_size, method=Image.ANTIALIAS):
@@ -42,25 +42,19 @@ def is_image_intact(img_path):
         return False
 
 
-def get_checked_images():
+def delete_corrupt_images():
     '''
     Tool for omitting unreadable image files from generated triplets
     :return:
     '''
-    data_set = pd.read_csv(MVC_GENERATED_TRIPLETS_CSV)
-    data_set = [[row['anchor'], row['positive'], row['negative']] for _, row in
-                tqdm(data_set.iterrows(), desc='Loading triplets',
-                     bar_format="{l_bar}%s{bar}%s{r_bar}" % (Fore.MAGENTA, Fore.RESET),
-                     total=len(data_set))]
-    new_set = []
-    for sample in tqdm(data_set, desc='Checking images',
-                       bar_format="{l_bar}%s{bar}%s{r_bar}" % (Fore.YELLOW, Fore.RESET), ):
-        with concurrent.futures.ThreadPoolExecutor(max_workers=64) as executor:
-            s = list(executor.map(is_image_intact, [MVC_IMAGES_FOLDER + img for img in sample]))
-            if len([x for x in s if x]) == 3:
-                new_set.append(sample)
-            else:
-                logging.warn('{0} is not readable'.format(sample))
-
-    pd.DataFrame(new_set, columns=['anchor', 'positive', 'negative']).to_csv(MVC_GENERATED_TRIPLETS_CSV, index=False)
-    return new_set
+    deleted = 0
+    available_image_list = glob.glob("{0}*.jpg".format(MVC_IMAGES_FOLDER))
+    for img in tqdm(available_image_list, desc='Checking images',
+                    bar_format="{l_bar}%s{bar}%s{r_bar}" % (Fore.MAGENTA, Fore.RESET), ):
+        if not is_image_intact(img):
+            try:
+                os.remove(img)
+                deleted += 1
+            except Exception as exp:
+                logging.error('Can not delete {0}'.format(img), exp)
+    logging.info('Deleted {0} images.'.format(deleted))

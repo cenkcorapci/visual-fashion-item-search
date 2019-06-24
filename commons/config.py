@@ -11,8 +11,8 @@ LOGS_PATH = '/tmp/tb_logs/'
 
 # Experiments
 RANDOM_STATE = 41
-DEFAULT_IMAGE_SIZE = 256
-DEFAULT_VECTOR_SIZE = 512
+DEFAULT_IMAGE_SIZE = 224
+DEFAULT_VECTOR_SIZE = 128
 
 # Local files
 TEMP_PATH = '/tmp'
@@ -27,7 +27,9 @@ MVC_ATTRIBUTES_PATH = '/run/media/twoaday/data-storag/data-sets/multi-view-cloth
 MVC_IMAGE_LINKS_PATH = '/run/media/twoaday/data-storag/data-sets/multi-view-clothing/image_links.json'
 MVC_INFO_PATH = '/run/media/twoaday/data-storag/data-sets/multi-view-clothing/mvc_info.json'
 MVC_IMAGES_FOLDER = '/run/media/twoaday/data-storag/data-sets/multi-view-clothing/images/'
-MVC_GENERATED_TRIPLETS_CSV = '/run/media/twoaday/data-storag/data-sets/multi-view-clothing/triplets.csv'
+MVC_GENERATED_EASY_TRIPLETS_CSV = '/run/media/twoaday/data-storag/data-sets/multi-view-clothing/triplets-easy.csv'
+MVC_GENERATED_MEDIUM_TRIPLETS_CSV = '/run/media/twoaday/data-storag/data-sets/multi-view-clothing/triplets-medium.csv'
+MVC_GENERATED_HARD_TRIPLETS_CSV = '/run/media/twoaday/data-storag/data-sets/multi-view-clothing/triplets-hard.csv'
 
 DIM_RED_MODEL_PATH = '/run/media/twoaday/data-storag/data-sets/cimri/pca_2.pkl'
 
