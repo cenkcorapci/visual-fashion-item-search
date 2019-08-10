@@ -49,7 +49,7 @@ def delete_corrupt_images():
     '''
     deleted = 0
     available_image_list = glob.glob("{0}*.jpg".format(MVC_IMAGES_FOLDER))
-    for img in tqdm(available_image_list, desc='Checking images',
+    for img in tqdm(available_image_list[100000:], desc='Checking images',
                     bar_format="{l_bar}%s{bar}%s{r_bar}" % (Fore.MAGENTA, Fore.RESET), ):
         if not is_image_intact(img):
             try:

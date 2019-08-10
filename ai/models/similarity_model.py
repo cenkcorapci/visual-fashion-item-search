@@ -1,8 +1,8 @@
-from keras.applications.xception import Xception
-from keras.layers import Dense, GlobalAveragePooling2D
+from keras.applications.resnet50 import ResNet50
+from keras.layers import Dense, AveragePooling2D
 from keras.layers import Input, concatenate
 from keras.models import Model
-from keras.optimizers import Adam
+from keras.optimizers import SGD
 
 from ai.loss_functions import lossless_triplet_loss
 from commons.config import DEFAULT_IMAGE_SIZE, DEFAULT_VECTOR_SIZE
@@ -11,20 +11,20 @@ from commons.config import DEFAULT_IMAGE_SIZE, DEFAULT_VECTOR_SIZE
 class ImageSimilarityNetwork:
     def __init__(self, dimensions=[DEFAULT_IMAGE_SIZE, DEFAULT_IMAGE_SIZE, 3]):
         self._dimensions = dimensions
-        self._optimization = Adam(lr=0.0001, beta_1=0.9, beta_2=0.999)
+        self._optimization = SGD(lr=.001, momentum=0.5)
 
     def _create_base_network(self):
         """
         Base network to be shared.
         """
-        base_model = Xception(input_shape=(self._dimensions[0], self._dimensions[1], self._dimensions[2]),
-                           include_top=False)
+        base_model = ResNet50(input_shape=(self._dimensions[0], self._dimensions[1], self._dimensions[2]),
+                              include_top=False)
         for layer in base_model.layers:
             layer.trainable = True
         x = base_model.output
 
         # added layers
-        x = GlobalAveragePooling2D()(x)
+        x = AveragePooling2D()(x)
         vector = Dense(DEFAULT_VECTOR_SIZE, activation='sigmoid', name='embeddings')(x)
 
         # this is the model we will train

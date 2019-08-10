@@ -71,7 +71,7 @@ checkpoint_callback = ModelCheckpoint(MODEL_PATH + MODEL_NAME + '.{epoch:02d}-{v
                                       verbose=1,
                                       save_best_only=False,
                                       save_weights_only=False)
-lr_scheduler = step_decay_schedule(initial_lr=.0002, decay_factor=.1, step_size=2)
+lr_scheduler = step_decay_schedule(initial_lr=.001, decay_factor=.1, step_size=2)
 callbacks = [tb_callback, es_callback, checkpoint_callback, lr_scheduler]
 
 model = ImageSimilarityNetwork().generate_network()
