@@ -1,15 +1,24 @@
-import glob
-import logging
-import os
-
-import numpy as np
+import requests
 from PIL import Image
-from colorama import Fore
-from keras.preprocessing import image
-from tqdm import tqdm
+from torchvision import transforms
 
-from commons.config import DEFAULT_IMAGE_SIZE
-from commons.config import MVC_IMAGES_FOLDER
+from commons.config import CROP_SIZE
+
+
+def read_crop(img_path, bbox):
+    """
+    Extracts the part of the image from given bounding box coordinates
+    :param img_path: full path for the image
+    :param bbox: bounding box as tuple ; x1, y1, x2, y2
+    :return: part of image cropped from the bbox coordinates
+    """
+    with open(img_path, 'rb') as f:
+        with Image.open(f) as img:
+            img = img.convert('RGB')
+    x1, y1, x2, y2 = bbox
+    if x1 < x2 <= img.size[0] and y1 < y2 <= img.size[1]:
+        img = img.crop((x1, y1, x2, y2))
+    return img
 
 
 def scale_image(image, max_size, method=Image.ANTIALIAS):
@@ -25,36 +34,30 @@ def scale_image(image, max_size, method=Image.ANTIALIAS):
     return back
 
 
-def is_image_intact(img_path):
-    try:
-        f = open(img_path, 'rb')
-        f = Image.open(f)
-        f = scale_image(f, [DEFAULT_IMAGE_SIZE, DEFAULT_IMAGE_SIZE])
-        f = np.asarray(f)
-        img_data = image.img_to_array(f)
-        img_data = np.expand_dims(img_data, axis=0)
-        img_data = img_data.astype('float32') / 255.
-        img_data = np.clip(img_data, 0., 1.)
-        _ = img_data[0]
-        return True
-    except Exception as exp:
-        logging.error(exp)
-        return False
-
-
-def delete_corrupt_images():
-    '''
-    Tool for omitting unreadable image files from generated triplets
+def download_image(image_url, download_path):
+    """
+    downloads the image to given image path
+    :param image_url: url
+    :param download_path: download path
     :return:
-    '''
-    deleted = 0
-    available_image_list = glob.glob("{0}*.jpg".format(MVC_IMAGES_FOLDER))
-    for img in tqdm(available_image_list[100000:], desc='Checking images',
-                    bar_format="{l_bar}%s{bar}%s{r_bar}" % (Fore.MAGENTA, Fore.RESET), ):
-        if not is_image_intact(img):
-            try:
-                os.remove(img)
-                deleted += 1
-            except Exception as exp:
-                logging.error('Can not delete {0}'.format(img), exp)
-    logging.info('Deleted {0} images.'.format(deleted))
+    """
+    name = image_url.split('/')[-1]
+    r = requests.get(image_url)
+    save_path = download_path + name
+    with open(save_path, 'wb') as f:
+        f.write(r.content)
+
+
+img_transform = transforms.Compose([
+    transforms.Scale(CROP_SIZE),
+    transforms.CenterCrop(CROP_SIZE),
+    transforms.ToTensor(),
+    transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+])
+
+
+def img_to_input(img_path):
+    with open(img_path, 'rb') as f:
+        with Image.open(f) as img:
+            img = img.convert('RGB')
+            return img_transform(img)

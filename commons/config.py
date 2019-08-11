@@ -11,13 +11,9 @@ LOGS_PATH = '/tmp/tb_logs/'
 
 # Experiments
 RANDOM_STATE = 41
-DEFAULT_IMAGE_SIZE = 256
-DEFAULT_VECTOR_SIZE = 512
 
 # Local files
 TEMP_PATH = '/tmp'
-IMAGE_DOWNLOAD_PATH = '/run/media/twoaday/data-storag/data-sets/cimri/images/'
-CIMRI_CSV = '/run/media/twoaday/data-storag/data-sets/cimri/match_core_data_set_with_images.csv'
 
 PRODUCT_IMAGES_PATH = '/run/media/twoaday/data-storag/data-sets/fashion-product-images-small/images/'
 PRODUCT_IMAGES_CSV_PATH = '/run/media/twoaday/data-storag/data-sets/fashion-product-images-small/styles.csv'
@@ -27,21 +23,35 @@ MVC_ATTRIBUTES_PATH = '/run/media/twoaday/data-storag/data-sets/multi-view-cloth
 MVC_IMAGE_LINKS_PATH = '/run/media/twoaday/data-storag/data-sets/multi-view-clothing/image_links.json'
 MVC_INFO_PATH = '/run/media/twoaday/data-storag/data-sets/multi-view-clothing/mvc_info.json'
 MVC_IMAGES_FOLDER = '/run/media/twoaday/data-storag/data-sets/multi-view-clothing/images/'
-MVC_GENERATED_EASY_TRIPLETS_CSV = '/run/media/twoaday/data-storag/data-sets/multi-view-clothing/triplets-easy.csv'
-MVC_GENERATED_MEDIUM_TRIPLETS_CSV = '/run/media/twoaday/data-storag/data-sets/multi-view-clothing/triplets-medium.csv'
-MVC_GENERATED_HARD_TRIPLETS_CSV = '/run/media/twoaday/data-storag/data-sets/multi-view-clothing/triplets-hard.csv'
 
-DIM_RED_MODEL_PATH = '/run/media/twoaday/data-storag/data-sets/cimri/pca_2.pkl'
+DUMPED_MODEL = "/home/twoaday/ai/models/fashion-vectorizer.pth.tar"
 
-CATEGORY_COUNTS_DICT = {'masterCategory': 7,
-                        'subCategory': 45,
-                        'articleType': 142,
-                        'gender': 5,
-                        'season': 4,
-                        'baseColour': 46,
-                        'usage': 8}
+# Deep Learning
+GPU_ID = 0
+TRAIN_BATCH_SIZE = 32
+TEST_BATCH_SIZE = 32
+TRIPLET_BATCH_SIZE = 32
+EXTRACT_BATCH_SIZE = 128
+TEST_BATCH_COUNT = 30
+NUM_WORKERS = 4
+LR = 0.001
+MOMENTUM = 0.5
+EPOCH = 10
 
-# create directories
-logging.info("Checking directories...")
-pathlib.Path(IMAGE_DOWNLOAD_PATH).mkdir(parents=True, exist_ok=True)
-logging.info("Directories are set.")
+LOG_INTERVAL = 10
+DUMP_INTERVAL = 500
+TEST_INTERVAL = 100
+
+ENABLE_INSHOP_DATASET = True
+INSHOP_DATASET_PRECENT = 0.8
+IMG_SIZE = 256
+CROP_SIZE = 224
+INTER_DIM = 512
+CATEGORIES = 20
+N_CLUSTERS = 50
+COLOR_TOP_N = 10
+TRIPLET_WEIGHT = 2.0
+ENABLE_TRIPLET_WITH_COSINE = False  # Buggy when backward...
+COLOR_WEIGHT = 0.1
+DISTANCE_METRIC = ('euclidean', 'euclidean')
+FREEZE_PARAM = False

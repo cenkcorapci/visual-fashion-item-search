@@ -1,79 +1,39 @@
-import keras.backend as K
+# -*- coding: utf-8 -*-
 
-from commons.config import DEFAULT_VECTOR_SIZE
+import time
 
-
-def triplet_loss(y_true, y_pred, alpha=0.4):
-    """
-    Implementation of the triplet loss function
-    Arguments:
-    y_true -- true labels, required when you define a loss in Keras, you don't need it in this function.
-    y_pred -- python list containing three objects:
-            anchor -- the encodings for the anchor data
-            positive -- the encodings for the positive data (similar to anchor)
-            negative -- the encodings for the negative data (different from anchor)
-    Returns:
-    loss -- real number, value of the loss
-    """
-
-    total_length = y_pred.shape.as_list()[-1]
-
-    anchor = y_pred[:, 0:int(total_length * 1 / 3)]
-    positive = y_pred[:, int(total_length * 1 / 3):int(total_length * 2 / 3)]
-    negative = y_pred[:, int(total_length * 2 / 3):int(total_length * 3 / 3)]
-
-    # distance between the anchor and the positive
-    pos_dist = K.sum(K.sqrt(anchor - positive), axis=1)
-
-    # distance between the anchor and the negative
-    neg_dist = K.sum(K.sqrt(anchor - negative), axis=1)
-
-    # compute loss
-    basic_loss = pos_dist - neg_dist + alpha
-    loss = K.maximum(basic_loss, 0.0)
-
-    return loss
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
 
 
-def lossless_triplet_loss(y_true, y_pred, N=DEFAULT_VECTOR_SIZE, beta=DEFAULT_VECTOR_SIZE, epsilon=1e-8):
-    """
-    Implementation of the triplet loss function
-    Use it with sigmoid activation
+class TripletMarginLossCosine(nn.Module):
+    def __init__(self, margin=1.0):
+        super(TripletMarginLossCosine, self).__init__()
+        self.margin = margin
 
-    Arguments:
-    y_true -- true labels, required when you define a loss in Keras, you don't need it in this function.
-    y_pred -- python list containing three objects:
-            anchor -- the encodings for the anchor data
-            positive -- the encodings for the positive data (similar to anchor)
-            negative -- the encodings for the negative data (different from anchor)
-    N  --  The number of dimension
-    beta -- The scaling factor, N is recommended
-    epsilon -- The Epsilon value to prevent ln(0)
+    def forward(self, anchor, positive, negative):
+        d_p = 1 - F.cosine_similarity(anchor, positive).view(-1, 1)
+        d_n = 1 - F.cosine_similarity(anchor, negative).view(-1, 1)
+        # p = 2
+        # eps = 1e-6
+        # d_p = F.pairwise_distance(anchor, positive, p, eps)
+        # d_n = F.pairwise_distance(anchor, negative, p, eps)
+        dist_hinge = torch.clamp(self.margin + d_p - d_n, min=0.0)
+        loss = torch.mean(dist_hinge)
+        return loss
 
 
-    Returns:
-    loss -- real number, value of the loss
-    """
+def timer_with_task(job=""):
+    def timer(fn):
+        def wrapped(*args, **kw):
+            print("{}".format(job + "..."))
+            tic = time.time()
+            ret = fn(*args, **kw)
+            toc = time.time()
+            print("{} Done. Time: {:.3f} sec".format(job, (toc - tic)))
+            return ret
 
-    total_length = y_pred.shape.as_list()[-1]
+        return wrapped
 
-    anchor = y_pred[:, 0:int(total_length * 1 / 3)]
-    positive = y_pred[:, int(total_length * 1 / 3):int(total_length * 2 / 3)]
-    negative = y_pred[:, int(total_length * 2 / 3):int(total_length * 3 / 3)]
-
-    # distance between the anchor and the positive
-    pos_dist = K.sum(K.square(anchor - positive), axis=1)
-
-    # distance between the anchor and the negative
-    neg_dist = K.sum(K.square(anchor - negative), axis=1)
-
-    # Non Linear Values
-
-    # -ln(-x/N+1)
-    pos_dist = -K.log(( pos_dist / beta) + 1 + epsilon)
-    neg_dist = -K.log(((N - neg_dist) / beta) + 1 + epsilon)
-
-    # compute loss
-    loss = neg_dist + pos_dist
-
-    return loss
+    return timer
