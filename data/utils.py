@@ -13,8 +13,8 @@ def download_cimri_image(image_id, size=DEFAULT_IMAGE_SIZE):
         f.write(r.content)
 
 
-def download_image(image_url, download_path):
-    name = image_url.split('/')[-1]
+def download_image(image_url, download_path, image_name=None):
+    name = image_url.split('/')[-1] if image_name is None else image_name
     r = requests.get(image_url)
     save_path = download_path + name
     with open(save_path, 'wb') as f:

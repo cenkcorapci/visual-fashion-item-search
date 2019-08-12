@@ -31,6 +31,9 @@ MVC_GENERATED_EASY_TRIPLETS_CSV = '/run/media/twoaday/data-storag/data-sets/mult
 MVC_GENERATED_MEDIUM_TRIPLETS_CSV = '/run/media/twoaday/data-storag/data-sets/multi-view-clothing/triplets-medium.csv'
 MVC_GENERATED_HARD_TRIPLETS_CSV = '/run/media/twoaday/data-storag/data-sets/multi-view-clothing/triplets-hard.csv'
 
+WHERE2BUYIT_IMAGES_FOLDER = '/run/media/twoaday/data-storag/data-sets/where2buyit/photos/'
+WHERE2BUYIT_IMAGES_LIST_FILE = '/run/media/twoaday/data-storag/data-sets/where2buyit/photos.txt'
+
 DIM_RED_MODEL_PATH = '/run/media/twoaday/data-storag/data-sets/cimri/pca_2.pkl'
 
 CATEGORY_COUNTS_DICT = {'masterCategory': 7,
