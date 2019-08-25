@@ -1,10 +1,10 @@
-from keras.applications.resnet50 import ResNet50
+from keras.applications.xception import Xception
 from keras.layers import Dense, AveragePooling2D
 from keras.layers import Input, concatenate
 from keras.models import Model
 from keras.optimizers import SGD
 
-from ai.loss_functions import lossless_triplet_loss
+from ai.loss_functions import triplet_loss
 from commons.config import DEFAULT_IMAGE_SIZE, DEFAULT_VECTOR_SIZE
 
 
@@ -17,7 +17,7 @@ class ImageSimilarityNetwork:
         """
         Base network to be shared.
         """
-        base_model = ResNet50(input_shape=(self._dimensions[0], self._dimensions[1], self._dimensions[2]),
+        base_model = Xception(input_shape=(self._dimensions[0], self._dimensions[1], self._dimensions[2]),
                               include_top=False)
         for layer in base_model.layers:
             layer.trainable = True
@@ -25,7 +25,8 @@ class ImageSimilarityNetwork:
 
         # added layers
         x = AveragePooling2D()(x)
-        vector = Dense(DEFAULT_VECTOR_SIZE, activation='sigmoid', name='embeddings')(x)
+        x = Dense(2048, activation='relu', name='fcc_before_embeddings')(x)
+        vector = Dense(DEFAULT_VECTOR_SIZE, activation='softmax', name='embeddings')(x)
 
         # this is the model we will train
         model = Model(inputs=base_model.input, outputs=vector)
@@ -48,7 +49,7 @@ class ImageSimilarityNetwork:
         merged_vector = concatenate([encoded_anchor, encoded_positive, encoded_negative], axis=-1, name='merged_layer')
 
         model = Model(inputs=[anchor_input, positive_input, negative_input], outputs=merged_vector)
-        model.compile(loss=lossless_triplet_loss, optimizer=self._optimization)
+        model.compile(loss=triplet_loss, optimizer=self._optimization)
         return model
 
     def get_trained_model(self, path):

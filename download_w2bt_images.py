@@ -26,12 +26,12 @@ pair_file_list = [p for p in pair_file_list if 'train_' in p]
 retrieval_file_list = glob.glob("/run/media/twoaday/data-storag/data-sets/where2buyit/meta/json/*.json")
 retrieval_file_list = [p for p in retrieval_file_list if 'retrieval_' in p]
 
-for pair_file in tqdm(pair_file_list, desc='Getting pairs for each category'):
+for pair_file in tqdm(pair_file_list[1:], desc='Getting pairs for each category'):
     category_name = pair_file.split('pairs_')[1].replace('.json', '')
     df_pairs = pd.read_json(pair_file)
     df_retrieval = [f for f in retrieval_file_list if category_name in f][0]
     df_retrieval = pd.read_json(df_retrieval)
-    p_bar = AtomicProgressBar(total=len(df_pairs), desc='Downloading images of {0}'.format(category_name))
+    p_bar = AtomicProgressBar(total=min(SAMPLE_SIZE, len(df_pairs)), desc='Downloading images of {0}'.format(category_name))
 
 
     def download_with_log(row):

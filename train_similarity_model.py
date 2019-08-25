@@ -3,18 +3,16 @@ import logging
 import pathlib
 import random
 
-import pandas as pd
-from colorama import Fore
 from keras.callbacks import ModelCheckpoint, TensorBoard, EarlyStopping
 from sklearn.model_selection import train_test_split
-from tqdm import tqdm
 
 from ai.callbacks import step_decay_schedule
 from ai.models.similarity_model import ImageSimilarityNetwork
-from commons.config import MVC_BASE_PATH, MVC_GENERATED_EASY_TRIPLETS_CSV
+from commons.config import MVC_BASE_PATH
 from data.triples_data_set import TriplesDataSet
+from data.utils import load_data_set
 
-MODEL_NAME = 'inception_similarity'
+MODEL_NAME = 'xception_similarity_v2'
 
 TB_LOG_DIRECTORY = MVC_BASE_PATH + 'tb_logs/' + MODEL_NAME + '/'
 MODEL_PATH = MVC_BASE_PATH + 'models/'
@@ -40,17 +38,12 @@ parser.add_argument('--sample_size', type=int, default=None)
 args = parser.parse_args()
 
 # Generate data set ------------------------------------------
-data_set = pd.read_csv(MVC_GENERATED_EASY_TRIPLETS_CSV)
 
-data_set = [[row['anchor'], row['positive'], row['negative']] for _, row in
-            tqdm(data_set.iterrows(), desc='Loading triplets',
-                 bar_format="{l_bar}%s{bar}%s{r_bar}" % (Fore.MAGENTA, Fore.RESET),
-                 total=len(data_set))]
-
+data_set = load_data_set()
 if args.sample_size is not None:
     data_set = random.sample(data_set, args.sample_size)
 
-logging.info('Using a data set with {0} triplets, example triplet: {1}'.format(len(data_set), data_set[0]))
+logging.info('Training with {0} samples.'.format(len(data_set)))
 
 train_data_set, validation_data_set = train_test_split(data_set, test_size=args.val_split)
 train_data_set = TriplesDataSet(train_data_set, args.batch_size)
