@@ -10,7 +10,7 @@ from ai.callbacks import step_decay_schedule
 from ai.models.similarity_model import ImageSimilarityNetwork
 from commons.config import MVC_BASE_PATH
 from data.triples_data_set import TriplesDataSet
-from data.utils import load_data_set
+from utils.data_utils import load_data_set
 
 MODEL_NAME = 'xception_similarity_v2'
 

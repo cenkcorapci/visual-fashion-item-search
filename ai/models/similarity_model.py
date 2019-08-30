@@ -1,4 +1,4 @@
-from keras.applications.xception import Xception
+from keras.applications.vgg16 import VGG16
 from keras.layers import Dense, AveragePooling2D
 from keras.layers import Input, concatenate
 from keras.models import Model
@@ -17,15 +17,15 @@ class ImageSimilarityNetwork:
         """
         Base network to be shared.
         """
-        base_model = Xception(input_shape=(self._dimensions[0], self._dimensions[1], self._dimensions[2]),
-                              include_top=False)
+        base_model = VGG16(input_shape=(self._dimensions[0], self._dimensions[1], self._dimensions[2]),
+                           include_top=False)
         for layer in base_model.layers:
             layer.trainable = True
         x = base_model.output
 
         # added layers
         x = AveragePooling2D()(x)
-        x = Dense(2048, activation='relu', name='fcc_before_embeddings')(x)
+        x = Dense(1024, activation='relu', name='fcc_before_embeddings')(x)
         vector = Dense(DEFAULT_VECTOR_SIZE, activation='softmax', name='embeddings')(x)
 
         # this is the model we will train

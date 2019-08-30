@@ -15,6 +15,7 @@ DEFAULT_IMAGE_SIZE = 256
 DEFAULT_VECTOR_SIZE = 512
 
 # Local files
+COMPOSITE_MODEL_PATH = '/home/twoaday/ai/models/fashion-vectorizer-converted.pth.tar'
 TEMP_PATH = '/tmp'
 IMAGE_DOWNLOAD_PATH = '/run/media/twoaday/data-storag/data-sets/cimri/images/'
 CIMRI_CSV = '/run/media/twoaday/data-storag/data-sets/cimri/match_core_data_set_with_images.csv'
@@ -43,6 +44,38 @@ CATEGORY_COUNTS_DICT = {'masterCategory': 7,
                         'season': 4,
                         'baseColour': 46,
                         'usage': 8}
+
+# Composite Model
+GPU_ID = 0
+TRAIN_BATCH_SIZE = 32
+TEST_BATCH_SIZE = 32
+TRIPLET_BATCH_SIZE = 32
+EXTRACT_BATCH_SIZE = 128
+TEST_BATCH_COUNT = 30
+NUM_WORKERS = 4
+LR = 0.001
+MOMENTUM = 0.5
+EPOCH = 10
+DUMPED_MODEL = "model_10_final.pth.tar"
+
+LOG_INTERVAL = 10
+DUMP_INTERVAL = 500
+TEST_INTERVAL = 100
+
+DATASET_BASE = r'/DATACETNER/1/ch/deepfashion_data'
+ENABLE_INSHOP_DATASET = True
+INSHOP_DATASET_PRECENT = 0.8
+IMG_SIZE = 256
+CROP_SIZE = 224
+INTER_DIM = 512
+CATEGORIES = 20
+N_CLUSTERS = 50
+COLOR_TOP_N = 10
+TRIPLET_WEIGHT = 2.0
+ENABLE_TRIPLET_WITH_COSINE = False  # Buggy when backward...
+COLOR_WEIGHT = 0.1
+DISTANCE_METRIC = ('euclidean', 'euclidean')
+FREEZE_PARAM = False
 
 # create directories
 logging.info("Checking directories...")

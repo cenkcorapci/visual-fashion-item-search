@@ -1,4 +1,7 @@
 import keras.backend as K
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
 
 from commons.config import DEFAULT_VECTOR_SIZE
 
@@ -70,10 +73,24 @@ def lossless_triplet_loss(y_true, y_pred, N=DEFAULT_VECTOR_SIZE, beta=DEFAULT_VE
     # Non Linear Values
 
     # -ln(-x/N+1)
-    pos_dist = -K.log(( pos_dist / beta) + 1 + epsilon)
+    pos_dist = -K.log((pos_dist / beta) + 1 + epsilon)
     neg_dist = -K.log(((N - neg_dist) / beta) + 1 + epsilon)
 
     # compute loss
     loss = neg_dist + pos_dist
 
     return loss
+
+
+class TripletMarginLossCosine(nn.Module):
+    def __init__(self, margin=1.0):
+        super(TripletMarginLossCosine, self).__init__()
+        self.margin = margin
+
+    def forward(self, anchor, positive, negative):
+        d_p = 1 - F.cosine_similarity(anchor, positive).view(-1, 1)
+        d_n = 1 - F.cosine_similarity(anchor, negative).view(-1, 1)
+
+        dist_hinge = torch.clamp(self.margin + d_p - d_n, min=0.0)
+        loss = torch.mean(dist_hinge)
+        return loss

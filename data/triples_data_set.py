@@ -9,7 +9,7 @@ from keras.preprocessing import image
 from sklearn.utils import shuffle
 
 from commons.config import DEFAULT_IMAGE_SIZE
-from commons.image_utils import scale_image
+from utils.image_utils import scale_image
 
 
 class TriplesDataSet(keras.utils.Sequence):
