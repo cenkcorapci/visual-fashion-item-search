@@ -13,7 +13,6 @@ from tqdm import tqdm
 from commons.atomic_counters import AtomicProgressBar
 from commons.config import WHERE2BUYIT_IMAGES_FOLDER, WHERE2BUYIT_IMAGES_LIST_FILE
 
-SAMPLE_SIZE = 1000
 # Get data
 photos_df = WHERE2BUYIT_IMAGES_LIST_FILE
 photos_df = pd.read_csv(photos_df, error_bad_lines=False, header=None)
@@ -31,7 +30,7 @@ for pair_file in tqdm(pair_file_list[1:], desc='Getting pairs for each category'
     df_pairs = pd.read_json(pair_file)
     df_retrieval = [f for f in retrieval_file_list if category_name in f][0]
     df_retrieval = pd.read_json(df_retrieval)
-    p_bar = AtomicProgressBar(total=min(SAMPLE_SIZE, len(df_pairs)), desc='Downloading images of {0}'.format(category_name))
+    p_bar = AtomicProgressBar(total=len(df_pairs), desc='Downloading images of {0}'.format(category_name))
 
 
     def download_with_log(row):
@@ -72,4 +71,4 @@ for pair_file in tqdm(pair_file_list[1:], desc='Getting pairs for each category'
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=16) as executor:
         _ = executor.map(download_with_log,
-                         [row for _, row in df_pairs.sample(min(SAMPLE_SIZE, len(df_pairs))).iterrows()])
+                         [row for _, row in df_pairs.iterrows()])

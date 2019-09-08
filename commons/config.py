@@ -35,6 +35,8 @@ MVC_GENERATED_HARD_TRIPLETS_CSV = '/run/media/twoaday/data-storag/data-sets/mult
 WHERE2BUYIT_IMAGES_FOLDER = '/run/media/twoaday/data-storag/data-sets/where2buyit/photos/'
 WHERE2BUYIT_IMAGES_LIST_FILE = '/run/media/twoaday/data-storag/data-sets/where2buyit/photos.txt'
 
+STANFORD_PRODUCT_IMAGES_FOLDER = '/run/media/twoaday/data-storag/data-sets/stanford-products-img-similarity/Stanford_Online_Products/'
+
 DIM_RED_MODEL_PATH = '/run/media/twoaday/data-storag/data-sets/cimri/pca_2.pkl'
 
 CATEGORY_COUNTS_DICT = {'masterCategory': 7,
