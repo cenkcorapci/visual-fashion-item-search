@@ -49,10 +49,14 @@ def load_mvc_data_set():
     for _, row in tqdm(df_mvc_info.iterrows(), desc='Parsing files', total=len(df_mvc_info)):
         file_name = row['image_url_2x'].split('/')[-1]
         if file_name in available_image_list:
+            category = row['category'].replace('"', '').lower()
+            category = 'underwear' if category == 'underwear & intimates' else category
+            category = 'outerwear' if category == 'coats & outerwear' else category
             df_data_set.append([file_name,
                                 'mvc_' + row['productName'],
-                                row['category'],
+                                category,
                                 MVC_IMAGES_FOLDER + file_name])
+
     df_data_set = pd.DataFrame(df_data_set)
     df_data_set.columns = ['name', 'product', 'category', 'file']
     return df_data_set
