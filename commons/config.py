@@ -11,7 +11,7 @@ LOGS_PATH = '/tmp/tb_logs/'
 
 # Experiments
 RANDOM_STATE = 41
-DEFAULT_IMAGE_SIZE = 256
+DEFAULT_IMAGE_SIZE = 224
 DEFAULT_VECTOR_SIZE = 512
 
 # Local files
@@ -58,7 +58,7 @@ NUM_WORKERS = 4
 LR = 0.001
 MOMENTUM = 0.5
 EPOCH = 10
-DUMPED_MODEL = "model_10_final.pth.tar"
+BASE_MODEL_PATH = '/home/twoaday/ai/models/fashion-vectorizer-converted.pth.tar'
 
 LOG_INTERVAL = 10
 DUMP_INTERVAL = 500

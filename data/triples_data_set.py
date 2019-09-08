@@ -1,85 +1,114 @@
+# -*- coding: utf-8 -*-
 import logging
-import random as pyrandom
 
-import imgaug.augmenters as iaa
-import keras
-import numpy as np
+import pandas as pd
+import torch.utils.data as data
 from PIL import Image
-from keras.preprocessing import image
 from sklearn.utils import shuffle
-
+from torchvision import transforms
+from tqdm import tqdm
+import random
+from ai.feature_extraction import vectorize, get_deep_color_top_n
+from commons.config import BASE_MODEL_PATH
 from commons.config import DEFAULT_IMAGE_SIZE
-from utils.image_utils import scale_image
+from utils.composite_model_utils import load_extractor_model
 
 
-class TriplesDataSet(keras.utils.Sequence):
-    def __init__(self, data_set, batch_size=32, shuffle_on_end=True, do_augmentations=True):
-        self._batch_size = batch_size
-        self._shuffle = shuffle_on_end
-        self._query_images = data_set
-        self._queries = self._query_images.loc[self._query_images.name != 'query'].values
-        self._query_images = self._query_images.loc[self._query_images.name == 'query']
-        queries_dict = {}
-        for s in self._query_images[['product', 'file']].values:
-            queries_dict[s[0]] = s[1]
-        self._query_images = queries_dict
-        self._do_augmentations = do_augmentations
-
-        self._aug = iaa.Sequential([
-            iaa.GaussianBlur(sigma=(0.0, 1.5)),
-            iaa.Fliplr(0.5),  # horizontally flip 50% of the images
-            iaa.Flipud(0.5)  # vertically flip 50% of the images
+class TripletsDataSet(data.Dataset):
+    def __init__(self, df, transform=True,
+                 shuffle=True,
+                 difficulty=.5,
+                 image_size=DEFAULT_IMAGE_SIZE,
+                 base_model_path=BASE_MODEL_PATH,
+                 nagative_sample_count=2000):
+        self._df = df
+        self._shuffle = shuffle
+        self._transform = transform
+        self._difficulty = difficulty
+        self._nagative_sample_count = nagative_sample_count
+        self._data_transform = transforms.Compose([
+            transforms.Resize([image_size, image_size]),
+            transforms.RandomHorizontalFlip(),
+            transforms.RandomRotation((-45, 45), resample=Image.BILINEAR),
+            transforms.RandomVerticalFlip(),
+            transforms.ToTensor()
         ])
-
+        self._extractor = load_extractor_model(base_model_path)
+        self._current_vectors = []
         self.on_epoch_end()
-
-    def __len__(self):
-        return int(len(self._queries) / self._batch_size)
-
-    def __getitem__(self, index, random=False):
-        try:
-            i = index
-            if random:
-                i = pyrandom.randint(0, int(self.__len__() / self._batch_size)) if random else index
-            samples = self._queries[i * self._batch_size:(i + 1) * self._batch_size]
-            X, y = self.__data_generation(samples)
-            return X, y
-        except Exception as exp:
-            logging.error("Can't fetch batch #{0}, fetching a random batch.".format(index), exp)
-            if not random:
-                return self.__getitem__(index, random=True)  # Get a random batch if an error occurs
-            else:
-                raise exp
+        self._negative_df = []
 
     def on_epoch_end(self):
         if self._shuffle:
-            logging.info("Shuffling data set")
-            self._queries = shuffle(self._queries)
+            self._df = shuffle(self._df)
+        self._current_vectors = self._vectorize_samples(self._nagative_sample_count)
 
-    def __data_generation(self, samples):
-        y = np.zeros((self._batch_size, 1))
-        products = set([row['product'] for _, row in samples])
-        negs = self._queries.loc[~self._queries['product'].isin(products)].sample(len(samples))[['files']]
-        negs = negs.values
-        X = [np.empty((self._batch_size, DEFAULT_IMAGE_SIZE, DEFAULT_IMAGE_SIZE, 3))] * 3
-        for i, (_, row) in enumerate(samples.iterrows()):
-            product = row['product']
-            pos = self._query_images[product]
-            X[0][i] = self._load_image(row['file'])
-            X[1][i] = self._load_image(pos)
-            X[2][i] = self._load_image(negs[i])
-        return X, y
+    def __len__(self):
+        return len(self._df)
 
-    def _load_image(self, img_path):
-        f = open(img_path, 'rb')
-        f = Image.open(f)
-        f = scale_image(f, [DEFAULT_IMAGE_SIZE, DEFAULT_IMAGE_SIZE])
-        f = np.asarray(f)
-        img_data = image.img_to_array(f)
-        img_data = np.expand_dims(img_data, axis=0)
-        img_data = img_data.astype('float32') / 255.
-        img_data = np.clip(img_data, 0., 1.)
-        img_data = img_data[0]
-        if self._do_augmentations:
-            img_data = self._aug.augment_image(img_data)
-        return img_data
+    def __getitem__(self, index):
+        query_row = self._df.values[index]
+        img = query_row[3]
+        img_p = self._df.loc[self._df['product'] == query_row[1]].sample(1)['file'].values[0]
+        img_n = self._get_negatives(query_row, 1)[0][0]
+
+        img, img_p, img_n = self._process_img(img), self._process_img(img_p), self._process_img(img_n)
+        return img, img_p, img_n
+
+    def _vectorize_samples(self, num_samples=2000):
+        rows = []
+        for _, row in tqdm(self._df.sample(min(len(self._df), num_samples)).iterrows(),
+                           desc='Vectorizing some of the samples',
+                           total=min(len(self._df), num_samples)):
+            try:
+                deep_feat, color_feat = vectorize(self._extractor, row['file'])
+                rows.append([row['name'],
+                             row['product'],
+                             row['category'],
+                             row['file'],
+                             deep_feat,
+                             color_feat])
+            except Exception as exp:
+                logging.error('Can not vectorize {0}'.format(row['file']), exp)
+        rows = pd.DataFrame(rows)
+        rows.columns = ['name', 'product', 'category', 'file', 'deep_feat', 'color_feat']
+        return rows
+
+    def _get_negatives(self, query_row, n):
+        rs = self._current_vectors
+        rs = rs.loc[rs['category'] != query_row[2]]
+        rs = rs.loc[rs['product'] != query_row[1]]
+        if random.uniform(0, 1) <= self._difficulty:
+            try:
+                deep_feat, color_feat = vectorize(self._extractor, query_row[3])
+                similar = get_deep_color_top_n(deep_feat,
+                                               color_feat,
+                                               rs.deep_feat.values.tolist(),
+                                               rs.color_feat.values.tolist(),
+                                               rs.file.values,
+                                               n)
+                return similar
+            except Exception as exp:
+                logging.error('Can not fetch close negatives, fetching random samples.. ', exp)
+        return rs.sample(n)
+
+    def _process_img(self, img_path):
+        with open(img_path, 'rb') as f:
+            with Image.open(f) as img:
+                img = img.convert('RGB')
+        if self._transform is not None:
+            img = self._data_transform(img)
+        return img
+
+
+if __name__ == '__main__':
+    from torch.utils.data import DataLoader
+    from data.data_set_loaders import load_where2buy_it_data_set
+
+    df = load_where2buy_it_data_set(500)
+    generator = TripletsDataSet(df, nagative_sample_count=100)
+    generator = DataLoader(generator, batch_size=1)
+    for img, img_p, img_n in list(generator):
+        print(img.shape)
+        print(img_p.shape)
+        print(img_n.shape)

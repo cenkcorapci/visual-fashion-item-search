@@ -8,7 +8,7 @@ from tqdm import tqdm
 from commons.config import WHERE2BUYIT_IMAGES_FOLDER, STANFORD_PRODUCT_IMAGES_FOLDER, MVC_IMAGES_FOLDER, MVC_INFO_PATH
 
 
-def load_where2buy_it_data_set():
+def load_where2buy_it_data_set(sample=None):
     logging.info('Loading where2buy it data set')
     result = [y for x in os.walk(WHERE2BUYIT_IMAGES_FOLDER) for y in glob.glob(os.path.join(x[0], '*.jpg'))]
     df_data_set = []
@@ -18,10 +18,10 @@ def load_where2buy_it_data_set():
         df_data_set.append([name, product, category, file])
     df_data_set = pd.DataFrame(df_data_set)
     df_data_set.columns = ['name', 'product', 'category', 'file']
-    return df_data_set
+    return df_data_set if sample is None else df_data_set.sample(sample)
 
 
-def load_stanford_product_images_data_set():
+def load_stanford_product_images_data_set(sample=None):
     logging.info('Loading stanford product images data set')
     result = [y for x in os.walk(STANFORD_PRODUCT_IMAGES_FOLDER) for y in glob.glob(os.path.join(x[0], '*.JPG'))]
 
@@ -33,10 +33,10 @@ def load_stanford_product_images_data_set():
         df_data_set.append([name, product, category, file])
     df_data_set = pd.DataFrame(df_data_set)
     df_data_set.columns = ['name', 'product', 'category', 'file']
-    return df_data_set
+    return df_data_set if sample is None else df_data_set.sample(sample)
 
 
-def load_mvc_data_set():
+def load_mvc_data_set(sample=None):
     logging.info('Loading mvc data set')
     df_data_set = []
     df_mvc_info = pd.read_json(MVC_INFO_PATH)
@@ -59,4 +59,10 @@ def load_mvc_data_set():
 
     df_data_set = pd.DataFrame(df_data_set)
     df_data_set.columns = ['name', 'product', 'category', 'file']
-    return df_data_set
+    return df_data_set if sample is None else df_data_set.sample(sample)
+
+
+def load_combined_data_set():
+    df = load_mvc_data_set()
+    df = pd.concat([df, load_stanford_product_images_data_set()])
+    return pd.concat([df, load_where2buy_it_data_set()])
