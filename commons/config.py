@@ -7,7 +7,7 @@ import pathlib
 
 # Logs
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
-LOGS_PATH = '/tmp/tb_logs/'
+LOGS_PATH = '/home/cenk/Research/tb-logs/image-retrieval/w2bt'
 
 # Experiments
 RANDOM_STATE = 41
@@ -32,8 +32,8 @@ MVC_GENERATED_EASY_TRIPLETS_CSV = '/run/media/twoaday/data-storag/data-sets/mult
 MVC_GENERATED_MEDIUM_TRIPLETS_CSV = '/run/media/twoaday/data-storag/data-sets/multi-view-clothing/triplets-medium.csv'
 MVC_GENERATED_HARD_TRIPLETS_CSV = '/run/media/twoaday/data-storag/data-sets/multi-view-clothing/triplets-hard.csv'
 
-WHERE2BUYIT_IMAGES_FOLDER = '/run/media/twoaday/data-storag/data-sets/where2buyit/photos/'
-WHERE2BUYIT_IMAGES_LIST_FILE = '/run/media/twoaday/data-storag/data-sets/where2buyit/photos.txt'
+WHERE2BUYIT_IMAGES_FOLDER = '/home/cenk/Research/data-sets/where2buyit'
+WHERE2BUYIT_IMAGES_LIST_FILE = WHERE2BUYIT_IMAGES_FOLDER + '/photos.txt'
 
 STANFORD_PRODUCT_IMAGES_FOLDER = '/run/media/twoaday/data-storag/data-sets/stanford-products-img-similarity/Stanford_Online_Products/'
 
@@ -81,5 +81,5 @@ FREEZE_PARAM = False
 
 # create directories
 logging.info("Checking directories...")
-pathlib.Path(IMAGE_DOWNLOAD_PATH).mkdir(parents=True, exist_ok=True)
+#pathlib.Path(IMAGE_DOWNLOAD_PATH).mkdir(parents=True, exist_ok=True)
 logging.info("Directories are set.")
