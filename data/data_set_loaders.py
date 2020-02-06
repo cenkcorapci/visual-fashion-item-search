@@ -14,7 +14,7 @@ def load_where2buy_it_data_set(sample=None):
     df_data_set = []
     for file in tqdm(result, desc='Parsing files'):
         s = file.split('/')
-        name, product, category = s[-1].replace('.jpg', ''), 'w2bt_' + s[-2], s[-3]
+        name, product, category = s[-1].replace('.jpg', ''), int(s[-2]), s[-3]
         df_data_set.append([name, product, category, file])
     df_data_set = pd.DataFrame(df_data_set)
     df_data_set.columns = ['name', 'product', 'category', 'file']

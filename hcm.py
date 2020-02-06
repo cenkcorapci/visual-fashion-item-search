@@ -1,17 +1,32 @@
 import logging
+import random
 
+import pandas as pd
 import pytorch_metric_learning.utils.logging_presets as logging_presets
 import torch
 import torch.nn as nn
 from pytorch_metric_learning import losses, miners, samplers, trainers, testers
-from sklearn.model_selection import train_test_split
 from torchvision import models, transforms
 
 from commons.config import LOGS_PATH
 from data.data_set_loaders import load_where2buy_it_data_set
 from data.where2buyit_dataset import Where2BuyItDataset
 
+logging.getLogger().setLevel(logging.INFO)
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
 df = load_where2buy_it_data_set()
+df['product'] = pd.factorize(df['product'])[0]
+groups = []
+for _, group in df.groupby('product'):
+    groups.append(group)
+random.shuffle(groups)
+split = int(len(groups) * .8)
+df_train, df_val = groups[:split], groups[split:]
+df_train = pd.concat(df_train)
+df_val = pd.concat(df_val)
+logging.info(f'train: {len(df_train)} val: {len(df_val)}')
+
 # Set the image transforms
 train_transform = transforms.Compose([transforms.Resize(256),
                                       transforms.RandomResizedCrop(scale=(0.16, 1), ratio=(0.75, 1.33), size=227),
@@ -23,14 +38,9 @@ val_transform = transforms.Compose([transforms.Resize(256),
                                     transforms.CenterCrop(227),
                                     transforms.ToTensor(),
                                     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
-df_train, df_val = train_test_split(df, test_size=.2)
+
 train_dataset = Where2BuyItDataset(df_train, train_transform)
 val_dataset = Where2BuyItDataset(df_val, val_transform)
-import pytorch_metric_learning
-
-logging.getLogger().setLevel(logging.INFO)
-logging.info("VERSION %s" % pytorch_metric_learning.__version__)
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 # This is a basic multilayer perceptron
@@ -123,7 +133,7 @@ embedder_optimizer = torch.optim.Adam(embedder.parameters(), lr=0.00001, weight_
 # Set the loss functions. loss0 will be applied to the first embedder, loss1 to the second embedder etc.
 loss0 = losses.TripletMarginLoss(margin=0.01)
 loss1 = losses.MultiSimilarityLoss(alpha=0.1, beta=40, base=0.5)
-loss2 = losses.ArcFaceLoss(margin=30, num_classes=100, embedding_size=64).to(device)
+loss2 = losses.TripletMarginLoss(0.01)
 
 # Set the mining functions. In this example we'll apply mining to the 2nd and 3rd cascaded outputs.
 miner1 = miners.MultiSimilarityMiner(epsilon=0.1)
@@ -133,9 +143,9 @@ miner2 = miners.HDCMiner(filter_percentage=0.25)
 sampler = samplers.MPerClassSampler(train_dataset.targets(), m=2)
 
 # Set other training parameters
-batch_size = 32
-num_epochs = 2
-iterations_per_epoch = 100
+batch_size = 128
+num_epochs = 30
+iterations_per_epoch = int(len(train_dataset) / batch_size)
 
 # Package the above stuff into dictionaries.
 models = {"trunk": trunk, "embedder": embedder}
